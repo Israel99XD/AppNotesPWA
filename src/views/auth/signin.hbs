@@ -1,0 +1,44 @@
+<div class="row mt-5">
+  <div class="col-md-4 mx-auto">
+    <div class="card  text-white rounded">
+      <div class="card-header bg-dark text-center pt-4">
+        <h1 class="h4 text-white">
+          INICIAR SESION
+        </h1>
+      </div>
+      <img
+        class="rounded-circle mx-auto d-block logo m-4"
+        src="/img/LOGO.jpg"
+        alt="Logo"
+      />
+      <div class="card-body">
+        <form action="/auth/signin" method="POST">
+          <div class="mb-3">
+            <label for="email">Correo Electronico:</label>
+            <input
+              type="email"
+              class="form-control bg-dark text-white"
+              name="email"
+              placeholder="Correo Elecronico"
+              autofocus
+            />
+          </div>
+          <div class="mb-3">
+            <label for="passswore">Contraseña:</label>
+            <input
+              type="password"
+              class="form-control bg-dark text-white"
+              name="password"
+              placeholder="Contraseña"
+            />
+          </div>
+          <button class="btn btn-success btn-block">
+            Ingresar
+          </button>
+        </form>
+      </div>
+
+      <p class="text-center">No tienes cuenta? <a href="/auth/signup" class="text-info">Registrarse</a></p>
+    </div>
+  </div>
+</div>

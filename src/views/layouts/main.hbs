@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Notes App</title>
+  <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+  <!-- Usar solo Bootstrap local -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  
+  <!-- FONT AWESOME -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css"
+    integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+
+  <!-- CUSTOM CSS -->
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="manifest" href="/manifest.json">
+</head>
+
+<body>
+
+  {{> navigation }}
+
+  <main class="container p-5">
+    <div class="col-md-4 offset-md-4">
+      {{> messages }}
+      {{> errors }}
+    </div>
+    {{{ body }}}
+  </main>
+
+  <!-- Scripts -->
+
+  <!-- main.hbs (o layout principal) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((registration) => {
+            console.log('Service Worker registrado con éxito:', registration);
+          })
+          .catch((error) => {
+            console.error('Error al registrar el Service Worker:', error);
+          });
+      });
+    }
+  </script>
+
+  <script>
+    if ('Notification' in window && navigator.serviceWorker) {
+      Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+          console.log('Notificaciones permitidas');
+        }
+      });
+    }
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+          console.log('Stream recibido:', stream);
+          const videoElement = document.getElementById('videoElement');
+          videoElement.srcObject = stream;
+        })
+        .catch((error) => {
+          console.error('Error al acceder a la cámara:', error);
+        });
+    });
+  </script>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="/js/bootstrap.bundle.min.js"></script>
+  <!--<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>-->
+
+  <script>
+    window.setTimeout(function () {
+      $(".alert").fadeTo(200, 0).slideUp(200, function () {
+        $(this).remove();
+      });
+    }, 2000);
+  </script>
+</body>
+
+</html>

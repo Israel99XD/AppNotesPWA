@@ -1,0 +1,127 @@
+<body>
+  <div class="col-md-4 mx-auto mt-5">
+    <div class="card">
+      <div class="card-header bg-dark text-center">
+        <h3 class="text-white">Nueva Nota</h3>
+      </div>
+      <div class="card-body text-right">
+        <form id="noteForm">
+          <div class="mb-3">
+            <label for="title">Titulo:</label>
+            <input
+              type="text"
+              id="title"
+              class="form-control"
+              placeholder="Titulo"
+              autofocus
+            />
+          </div>
+          <div class="mb-3">
+            <label for="description">Descripcion:</label>
+            <textarea
+              id="description"
+              class="form-control"
+              placeholder="Descripcion"
+            ></textarea>
+          </div>
+          <button class="btn btn-primary w-100" type="submit">
+            Save
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Abrir base de datos en IndexedDB
+    function openDatabase() {
+      const request = indexedDB.open('notesDatabase', 1);
+
+      // Crear el esquema de la base de datos si no existe
+      request.onupgradeneeded = function(event) {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains('notes')) {
+          db.createObjectStore('notes', { keyPath: 'id', autoIncrement: true });
+        }
+      };
+
+      return request;
+    }
+
+    // Función para guardar una nota en IndexedDB
+    function saveToIndexedDB(note) {
+      const dbRequest = openDatabase();
+
+      dbRequest.onsuccess = function(event) {
+        const db = event.target.result;
+        const transaction = db.transaction(['notes'], 'readwrite');
+        const store = transaction.objectStore('notes');
+        
+        // Agregar la nota
+        const addRequest = store.add(note);
+
+        addRequest.onsuccess = function() {
+          console.log('Nota guardada en IndexedDB');
+        };
+
+        addRequest.onerror = function(event) {
+          console.error('Error al guardar la nota en IndexedDB:', event.target.error);
+        };
+      };
+    }
+
+    // Función para guardar en localStorage
+    function saveToLocalStorage(note) {
+      let notes = JSON.parse(localStorage.getItem('notes')) || [];
+      notes.push(note);
+      localStorage.setItem('notes', JSON.stringify(notes));
+    }
+
+    // Función para guardar en sessionStorage
+    function saveToSessionStorage(note) {
+      let notes = JSON.parse(sessionStorage.getItem('notes')) || [];
+      notes.push(note);
+      sessionStorage.setItem('notes', JSON.stringify(notes));
+    }
+
+    // Función para cargar las notas desde el almacenamiento
+    function loadFromStorage() {
+      const savedNotesLocal = JSON.parse(localStorage.getItem('notes')) || [];
+      const savedNotesSession = JSON.parse(sessionStorage.getItem('notes')) || [];
+      console.log("Notas en LocalStorage:", savedNotesLocal);
+      console.log("Notas en SessionStorage:", savedNotesSession);
+    }
+
+    // Llamar para cargar las notas al cargar la página
+    window.onload = loadFromStorage;
+
+    // Manejar el envío del formulario
+    document.getElementById('noteForm').addEventListener('submit', function(event) {
+      event.preventDefault(); // Evitar el envío tradicional del formulario
+
+      const title = document.getElementById('title').value;
+      const description = document.getElementById('description').value;
+
+      if (title && description) {
+        const note = {
+          title: title,
+          description: description,
+          createdAt: new Date().toISOString()
+        };
+
+        // Guardar la nueva nota en LocalStorage, SessionStorage y IndexedDB
+        saveToLocalStorage(note);
+        saveToSessionStorage(note);
+        saveToIndexedDB(note);
+
+        // Limpiar el formulario
+        document.getElementById('title').value = '';
+        document.getElementById('description').value = '';
+
+        alert('Nota guardada en LocalStorage, SessionStorage y IndexedDB');
+      } else {
+        alert('Por favor, complete todos los campos');
+      }
+    });
+  </script>
+</body>
