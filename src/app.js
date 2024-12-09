@@ -11,8 +11,7 @@ import { fileURLToPath } from "url";
 import https from "https"; // Importar https
 import fs from "fs"; // Importar fs
 import { config } from "dotenv";
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+
 config();
 
 import { MONGODB_URI, PORT } from "./config.js";
@@ -91,20 +90,6 @@ app.use((error, req, res, next) => {
   });
 });
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDgPMeNHu9NyWZY5UqILkDE9FuZTb0Vmhs",
-  authDomain: "notesapp-6a645.firebaseapp.com",
-  projectId: "notesapp-6a645",
-  storageBucket: "notesapp-6a645.firebasestorage.app",
-  messagingSenderId: "63030377599",
-  appId: "1:63030377599:web:6438f11bb7289bd5a1934a",
-  measurementId: "G-B0SNDQQ2HT"
-};
-
-// Initialize Firebase
-const firebaseApp = initializeApp(firebaseConfig);
-const analytics = getAnalytics(firebaseApp);
-
 // Leer los archivos de clave y certificado
 const privateKey = fs.readFileSync(join(__dirname, "certs", "localhost.key"), "utf8");
 const certificate = fs.readFileSync(join(__dirname, "certs", "localhost.crt"), "utf8");
@@ -114,7 +99,7 @@ const credentials = { key: privateKey, cert: certificate };
 const server = https.createServer(credentials, app);
 
 // Escuchar en el puerto definido en .env o por defecto en 4000
-server.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`Server running on https://localhost:${PORT}`);
   console.log("MongoDB URI:", MONGODB_URI);
 });
