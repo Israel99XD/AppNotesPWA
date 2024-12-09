@@ -12,4 +12,110 @@
   </div>
 
   <video class="mt-3" id="videoElement" autoplay></video>
+
+<div class="text-center">
+  <audio id="audioElement" class="mt-3 mb-3" controls></audio>
+
 </div>
+
+  <button class="btn btn-success mb-3" id="startRecordButton">Iniciar Grabación</button>
+  <button class="btn btn-danger mb-3" id="stopRecordButton" disabled>Detener Grabación</button>
+  <button class="btn btn-info" id="playAudioButton">Reproducir Última Grabación</button>
+</div>
+
+<script>
+  let mediaRecorder;
+  let audioChunks = [];
+  let audioBlob;
+
+  // Configuración de IndexedDB
+  const request = indexedDB.open('audioDatabase', 1);
+  request.onupgradeneeded = function (event) {
+    const db = event.target.result;
+    const store = db.createObjectStore('audio', { keyPath: 'id', autoIncrement: true });
+    store.createIndex('timestamp', 'timestamp', { unique: false });
+  };
+
+  request.onsuccess = function (event) {
+    console.log('Base de datos de audio abierta correctamente');
+  };
+
+  request.onerror = function (event) {
+    console.error('Error al abrir la base de datos de audio:', event.target.error);
+  };
+
+  // Función para iniciar la grabación
+  document.getElementById('startRecordButton').addEventListener('click', async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunks.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        audioChunks = [];
+
+        // Guardar en IndexedDB
+        const dbRequest = indexedDB.open('audioDatabase', 1);
+        dbRequest.onsuccess = function (event) {
+          const db = event.target.result;
+          const transaction = db.transaction('audio', 'readwrite');
+          const store = transaction.objectStore('audio');
+          store.add({ audio: audioBlob, timestamp: new Date().toISOString() });
+        };
+
+        console.log('Audio grabado y guardado en IndexedDB');
+      };
+
+      mediaRecorder.start();
+      document.getElementById('startRecordButton').disabled = true;
+      document.getElementById('stopRecordButton').disabled = false;
+    } catch (error) {
+      console.error('Error al acceder al micrófono:', error);
+    }
+  });
+
+  // Función para detener la grabación
+  document.getElementById('stopRecordButton').addEventListener('click', () => {
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+      document.getElementById('startRecordButton').disabled = false;
+      document.getElementById('stopRecordButton').disabled = true;
+    }
+  });
+
+  // Función para reproducir la última grabación
+  document.getElementById('playAudioButton').addEventListener('click', () => {
+    const dbRequest = indexedDB.open('audioDatabase', 1);
+    dbRequest.onsuccess = function (event) {
+      const db = event.target.result;
+      const transaction = db.transaction('audio', 'readonly');
+      const store = transaction.objectStore('audio');
+
+      let lastAudioData;
+      const cursorRequest = store.openCursor(null, 'prev'); // Recorrer en orden inverso para obtener la última entrada
+
+      cursorRequest.onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (cursor) {
+          lastAudioData = cursor.value; // Obtiene la última grabación
+          cursor.continue();
+        } else {
+          if (lastAudioData) {
+            const audioElement = document.getElementById('audioElement');
+            const audioURL = URL.createObjectURL(lastAudioData.audio);
+            audioElement.src = audioURL;
+            audioElement.play();
+          } else {
+            console.log('No hay grabaciones disponibles');
+          }
+        }
+      };
+    };
+  });
+</script>

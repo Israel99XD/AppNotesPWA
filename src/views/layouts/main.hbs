@@ -7,7 +7,7 @@
   <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
   <!-- Usar solo Bootstrap local -->
   <link rel="stylesheet" href="/css/bootstrap.min.css">
-  
+
   <!-- FONT AWESOME -->
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css"
     integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
@@ -31,7 +31,6 @@
 
   <!-- Scripts -->
 
-  <!-- main.hbs (o layout principal) -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -51,6 +50,8 @@
       Notification.requestPermission().then((permission) => {
         if (permission === 'granted') {
           console.log('Notificaciones permitidas');
+        } else {
+          console.warn('Permisos de notificaciones denegados');
         }
       });
     }
@@ -68,12 +69,38 @@
           console.error('Error al acceder a la cámara:', error);
         });
     });
+
   </script>
+
+  <script>
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((registration) => {
+            console.log('Service Worker registrado con éxito:', registration);
+
+            // Esperar a que el Service Worker esté activo antes de suscribirse
+            navigator.serviceWorker.ready.then((registration) => {
+              registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: 'BJ66BCXQsh7H_Ta1uRT3O-YfllzvPXC-Ea7Mrw3nwpZ_ej8ABuxJvZBL3C2kEnbNWKJMCwffYhwvGAKidRU_9JU' // Reemplaza esto con tu clave pública VAPID
+              }).then(subscription => {
+                console.log('Suscripción a push registrada:', subscription);
+              }).catch(error => {
+                console.error('Error en la suscripción push:', error);
+              });
+            });
+          })
+          .catch((error) => {
+            console.error('Error al registrar el Service Worker:', error);
+          });
+      });
+    }
+  </script>
+
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="/js/bootstrap.bundle.min.js"></script>
-  <!--<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>-->
 
   <script>
     window.setTimeout(function () {

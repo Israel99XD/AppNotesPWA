@@ -13,4 +13,24 @@
   </div>
 
   <video class="mt-3" id="videoElement" autoplay></video>
+<button class="btn btn-primary mt-3" id="sendNotificationButton">Enviar Notificación</button>
+
 </div>
+
+<script>
+  document.getElementById('sendNotificationButton').addEventListener('click', () => {
+    fetch('/api/send-notification', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: 'Prueba de notificación',
+        message: 'Este es un mensaje de prueba',
+      }),
+    })
+    .then(response => response.json())
+    .then(data => console.log('Notificación enviada:', data))
+    .catch(error => console.error('Error al enviar notificación:', error));
+  });
+</script>

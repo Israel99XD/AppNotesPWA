@@ -45,6 +45,11 @@ self.addEventListener('activate', (event) => {
 
 // Interceptar peticiones y servir desde la caché si es posible, de lo contrario, obtener de la red
 self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') {
+    // No cachear solicitudes que no sean GET
+    return;
+  }
+
   const url = new URL(event.request.url);
   if (url.origin !== location.origin) {
     // Si no es del mismo origen, deja que el navegador maneje la solicitud
@@ -76,6 +81,7 @@ self.addEventListener('fetch', (event) => {
 });
 
 
+
 self.addEventListener('sync', (event) => {
   if (event.tag === 'syncData') {
     event.waitUntil(syncData());
@@ -83,8 +89,53 @@ self.addEventListener('sync', (event) => {
 });
 
 async function syncData() {
-  // Lógica para sincronizar los datos almacenados en IndexedDB o en Cache
+  const dbRequest = indexedDB.open('notesDatabase', 1);
+
+  dbRequest.onsuccess = async function(event) {
+    const db = event.target.result;
+    const transaction = db.transaction('notes', 'readonly');
+    const store = transaction.objectStore('notes');
+    const allNotes = store.getAll(); // Obtener todos los datos almacenados
+
+    allNotes.onsuccess = async function(event) {
+      const notes = event.target.result;
+
+      if (notes.length > 0) {
+        console.log('Datos obtenidos de IndexedDB:', notes);
+
+        // Lógica para enviar estos datos al servidor o a una API
+        try {
+          const response = await fetch('/api/sync-notes', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(notes),
+          });
+
+          if (!response.ok) {
+            throw new Error('Error al sincronizar los datos');
+          }
+
+          console.log('Datos sincronizados con éxito');
+        } catch (error) {
+          console.error('Error al sincronizar los datos:', error);
+        }
+      } else {
+        console.log('No hay datos para sincronizar');
+      }
+    };
+
+    transaction.onerror = function() {
+      console.error('Error al acceder a la base de datos');
+    };
+  };
+
+  dbRequest.onerror = function() {
+    console.error('Error al abrir la base de datos');
+  };
 }
+
 
 
 
@@ -110,3 +161,24 @@ request.onsuccess = function(event) {
 request.onerror = function(event) {
   console.error('Error al abrir la base de datos:', event.target.error);
 };
+
+// Ejemplo de cómo manejar datos de push
+self.addEventListener('push', (event) => {
+  let data;
+  try {
+    data = event.data.json();
+  } catch (e) {
+    console.error('Error al parsear los datos de la notificación:', e);
+    return;
+  }
+
+  const options = {
+    body: data.body,
+    icon: '/icons/favicon.ico',
+    badge: '/icons/badge.png'
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});

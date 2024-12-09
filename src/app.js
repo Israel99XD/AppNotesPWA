@@ -11,6 +11,8 @@ import { fileURLToPath } from "url";
 import https from "https"; // Importar https
 import fs from "fs"; // Importar fs
 import { config } from "dotenv";
+import webpush from "web-push";
+
 
 config();
 
@@ -19,6 +21,8 @@ import { MONGODB_URI, PORT } from "./config.js";
 import indexRoutes from "./routes/index.routes.js";
 import notesRoutes from "./routes/notes.routes.js";
 import userRoutes from "./routes/auth.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
+
 import "./config/passport.js";
 
 // Initializations
@@ -73,6 +77,8 @@ app.use((req, res, next) => {
 app.use(indexRoutes);
 app.use(userRoutes);
 app.use(notesRoutes);
+app.use("/api", notificationRoutes);
+
 
 // static files
 app.use(express.static(join(__dirname, "public")));
